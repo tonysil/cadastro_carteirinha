@@ -75,7 +75,6 @@ const Login = () => {
           }}
           view="sign_in"
           showLinks={false}
-          redirectTo={window.location.origin}
         />
       </div>
     </div>

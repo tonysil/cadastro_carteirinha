@@ -57,12 +57,7 @@ const DashboardLayout = () => {
               >
                 Editor Carteirinha
               </Link>
-              <Link
-                to="/admin"
-                className="text-sm font-medium hover:text-primary"
-              >
-                Admin
-              </Link>
+              
             </div>
             <Button
               variant="ghost"

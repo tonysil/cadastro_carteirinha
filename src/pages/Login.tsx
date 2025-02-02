@@ -46,6 +46,9 @@ const Login = () => {
                 },
               },
             },
+            className: {
+              anchor: 'hidden',
+            },
           }}
           providers={[]}
           localization={{
@@ -57,7 +60,7 @@ const Login = () => {
                 loading_button_label: "Entrando...",
                 email_input_placeholder: "Seu email",
                 password_input_placeholder: "Sua senha",
-                link_text: "Já tem uma conta? Entre",
+                link_text: "",
               },
               sign_up: {
                 email_label: "Email",
@@ -66,10 +69,12 @@ const Login = () => {
                 loading_button_label: "Cadastrando...",
                 email_input_placeholder: "Seu email",
                 password_input_placeholder: "Sua senha",
-                link_text: "Não tem uma conta? Cadastre-se",
+                link_text: "",
               },
             },
           }}
+          view="sign_in"
+          showLinks={false}
           redirectTo={window.location.origin}
         />
       </div>

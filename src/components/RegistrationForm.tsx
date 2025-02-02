@@ -390,6 +390,50 @@ const RegistrationForm = () => {
     setIsLoading(true);
 
     try {
+      // Verificar se já existe um associado com este CPF
+      const { data: existingAssociate, error: checkError } = await supabase
+        .from('associates')
+        .select('id, name, cpf')
+        .eq('cpf', formData.cpf.replace(/\D/g, ''))
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingAssociate) {
+        toast({
+          title: "CPF já cadastrado",
+          description: `Já existe um associado cadastrado com este CPF: ${existingAssociate.name}`,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Verificar se algum dependente tem CPF duplicado
+      for (const dependent of dependents) {
+        const { data: existingDependent, error: checkDepError } = await supabase
+          .from('dependents')
+          .select('id, name, cpf')
+          .eq('cpf', dependent.cpf.replace(/\D/g, ''))
+          .single();
+
+        if (checkDepError && checkDepError.code !== 'PGRST116') {
+          throw checkDepError;
+        }
+
+        if (existingDependent) {
+          toast({
+            title: "CPF já cadastrado",
+            description: `O dependente ${dependent.name} possui um CPF já cadastrado no sistema`,
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
       // 1. Upload da foto do associado
       let photoUrl = null;
       if (photoFile) {
@@ -433,7 +477,7 @@ const RegistrationForm = () => {
 
       if (associateError) throw associateError;
 
-      // 3. Inserir dependentes
+      // 3. Inserir dependentes com o nome do associado
       if (dependents.length > 0) {
         const dependentsToInsert = await Promise.all(dependents.map(async (dependent) => {
           let dependentPhotoUrl = null;
@@ -467,7 +511,8 @@ const RegistrationForm = () => {
             association_date: dependent.associationDate,
             expiration_date: dependent.expirationDate,
             photo_url: dependentPhotoUrl,
-            associate_id: associateData.id
+            associate_id: associateData.id,
+            name_associado: formData.name
           };
         }));
 

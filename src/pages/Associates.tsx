@@ -297,12 +297,35 @@ const Associates = () => {
     try {
       setLoading(true);
 
-      const { error } = await supabase
+      // Verificar se já existe outro associado com este CPF
+      const { data: existingAssociate, error: checkError } = await supabase
+        .from('associates')
+        .select('id, name, cpf')
+        .eq('cpf', editingAssociate.cpf.replace(/\D/g, ''))
+        .neq('id', editingAssociate.id) // Excluir o próprio associado da verificação
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingAssociate) {
+        toast({
+          title: "CPF já cadastrado",
+          description: `Este CPF já está cadastrado para outro associado: ${existingAssociate.name}`,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // 1. Atualizar o associado
+      const { error: associateError } = await supabase
         .from('associates')
         .update({
           name: editingAssociate.name,
-          cpf: editingAssociate.cpf.replace(/\D/g, ''), // Remove formatação
-          rg: editingAssociate.rg.replace(/\D/g, ''), // Remove formatação
+          cpf: editingAssociate.cpf.replace(/\D/g, ''),
+          rg: editingAssociate.rg.replace(/\D/g, ''),
           role: editingAssociate.role,
           company: editingAssociate.company,
           association_date: editingAssociate.association_date,
@@ -310,7 +333,15 @@ const Associates = () => {
         })
         .eq('id', editingAssociate.id);
 
-      if (error) throw error;
+      if (associateError) throw associateError;
+
+      // 2. Atualizar o nome do associado em todos os dependentes vinculados
+      const { error: dependentsError } = await supabase
+        .from('dependents')
+        .update({ name_associado: editingAssociate.name })
+        .eq('associate_id', editingAssociate.id);
+
+      if (dependentsError) throw dependentsError;
 
       toast({
         title: "Sucesso",
@@ -318,7 +349,7 @@ const Associates = () => {
       });
 
       setEditModalOpen(false);
-      fetchAssociates(); // Recarrega a lista
+      fetchAssociates();
 
     } catch (error) {
       console.error('Erro ao atualizar associado:', error);
@@ -581,12 +612,34 @@ const Associates = () => {
     try {
       setLoading(true);
 
+      // Verificar se já existe outro dependente com este CPF
+      const { data: existingDependent, error: checkError } = await supabase
+        .from('dependents')
+        .select('id, name, cpf')
+        .eq('cpf', editingDependent.cpf.replace(/\D/g, ''))
+        .neq('id', editingDependent.id) // Excluir o próprio dependente da verificação
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingDependent) {
+        toast({
+          title: "CPF já cadastrado",
+          description: `Este CPF já está cadastrado para outro dependente: ${existingDependent.name}`,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('dependents')
         .update({
           name: editingDependent.name,
-          cpf: editingDependent.cpf.replace(/\D/g, ''), // Remove formatação
-          rg: editingDependent.rg.replace(/\D/g, ''), // Remove formatação
+          cpf: editingDependent.cpf.replace(/\D/g, ''),
+          rg: editingDependent.rg.replace(/\D/g, ''),
           company: editingDependent.company,
           association_date: editingDependent.association_date,
           expiration_date: editingDependent.expiration_date
@@ -601,7 +654,7 @@ const Associates = () => {
       });
 
       setEditDependentModalOpen(false);
-      fetchAssociates(); // Recarrega a lista
+      fetchAssociates();
 
     } catch (error) {
       console.error('Erro ao atualizar dependente:', error);

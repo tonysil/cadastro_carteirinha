@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import EditDependentForm from "../associates/EditDependentForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import ReactCrop from "react-image-crop";
 
 interface EditDependentDialogProps {
   open: boolean;
@@ -23,6 +24,14 @@ interface EditDependentDialogProps {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPhotoChange: (file: File | null) => void;
   onSave: () => void;
+  cropModalOpen: boolean;
+  setCropModalOpen: (open: boolean) => void;
+  selectedImage: string | null;
+  crop: any;
+  setCrop: (crop: any) => void;
+  handleCropComplete: (croppedImage: string) => void;
+  imgRef: React.RefObject<HTMLImageElement>;
+  handleCropSave: () => void;
 }
 
 const EditDependentDialog = ({
@@ -32,6 +41,14 @@ const EditDependentDialog = ({
   onInputChange,
   onPhotoChange,
   onSave,
+  cropModalOpen,
+  setCropModalOpen,
+  selectedImage,
+  crop,
+  setCrop,
+  handleCropComplete,
+  imgRef,
+  handleCropSave,
 }: EditDependentDialogProps) => {
   const { toast } = useToast();
 
@@ -97,6 +114,37 @@ const EditDependentDialog = ({
           <Button onClick={handleSave}>Salvar</Button>
         </div>
       </DialogContent>
+      <Dialog open={cropModalOpen} onOpenChange={setCropModalOpen}>
+        <DialogContent className="max-w-[650px] h-[450px] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Recortar Imagem do Dependente</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {selectedImage && (
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={handleCropComplete}
+              >
+                <img
+                  ref={imgRef}
+                  src={selectedImage}
+                  alt="Crop"
+                  className="max-h-[350px] w-auto"
+                />
+              </ReactCrop>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setCropModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCropSave}>
+              Salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

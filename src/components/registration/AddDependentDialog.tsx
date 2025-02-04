@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import DependentPhotoUpload from "../DependentPhotoUpload";
+import ReactCrop from "react-image-crop";
 
 interface AddDependentDialogProps {
   open: boolean;
@@ -26,6 +27,14 @@ interface AddDependentDialogProps {
     association_date: string;
     expiration_date: string;
   };
+  cropModalOpen: boolean;
+  setCropModalOpen: (open: boolean) => void;
+  selectedImage: string | null;
+  crop: any;
+  setCrop: React.Dispatch<React.SetStateAction<any>>;
+  imgRef: React.RefObject<HTMLImageElement>;
+  handleCropComplete: () => void;
+  handleCropSave: () => void;
 }
 
 const AddDependentDialog = ({
@@ -36,6 +45,14 @@ const AddDependentDialog = ({
   handleAddDependent,
   handleInputChange,
   associateInfo,
+  cropModalOpen,
+  setCropModalOpen,
+  selectedImage,
+  crop,
+  setCrop,
+  imgRef,
+  handleCropComplete,
+  handleCropSave,
 }: AddDependentDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -119,6 +136,37 @@ const AddDependentDialog = ({
           <Button onClick={handleAddDependent}>Adicionar</Button>
         </div>
       </DialogContent>
+      <Dialog open={cropModalOpen} onOpenChange={setCropModalOpen}>
+        <DialogContent className="max-w-[650px] h-[450px] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Recortar Imagem do Dependente</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {selectedImage && (
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={handleCropComplete}
+              >
+                <img
+                  ref={imgRef}
+                  src={selectedImage}
+                  alt="Crop"
+                  className="max-h-[350px] w-auto"
+                />
+              </ReactCrop>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setCropModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCropSave}>
+              Salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

@@ -35,6 +35,7 @@ interface AssociateTableProps {
   onDelete: (id: string) => void;
   onDeleteDependent: (info: { id: string; name: string; associateId: string }) => void;
   onEditDependent: (id: string) => void;
+  onAddDependent: (associate: Associate) => void;
 }
 
 const AssociateTable = ({
@@ -45,6 +46,7 @@ const AssociateTable = ({
   onDelete,
   onDeleteDependent,
   onEditDependent,
+  onAddDependent,
 }: AssociateTableProps) => {
   const navigate = useNavigate();
 

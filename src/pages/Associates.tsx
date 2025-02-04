@@ -73,6 +73,17 @@ const Associates = () => {
   });
   const [editDependentCompletedCrop, setEditDependentCompletedCrop] = useState<Crop | null>(null);
   const editDependentImgRef = useRef<HTMLImageElement>(null);
+  const [dependentCropModalOpen, setDependentCropModalOpen] = useState(false);
+  const [dependentSelectedImage, setDependentSelectedImage] = useState<string | null>(null);
+  const [dependentCrop, setDependentCrop] = useState<Crop>({
+    unit: '%',
+    width: 100,
+    height: 100,
+    x: 0,
+    y: 0
+  });
+  const [dependentCompletedCrop, setDependentCompletedCrop] = useState<Crop | null>(null);
+  const dependentImgRef = useRef<HTMLImageElement>(null);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -421,7 +432,7 @@ const Associates = () => {
   };
 
   const handleEditCropSave = async () => {
-    if (editImgRef.current && editCompletedCrop && editingAssociate) {
+    if (editImgRef.current && editCompletedCrop) {
       const canvas = document.createElement('canvas');
       const scaleX = editImgRef.current.naturalWidth / editImgRef.current.width;
       const scaleY = editImgRef.current.naturalHeight / editImgRef.current.height;
@@ -442,42 +453,44 @@ const Associates = () => {
           editCompletedCrop.height
         );
 
+        // Converter para blob e salvar
         canvas.toBlob(async (blob) => {
-          if (blob) {
+          if (blob && editingAssociate) {
+            const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+            
             try {
-              setLoading(true);
-              
-              // Criar nome único para o arquivo
-              const fileExt = 'jpg';
-              const fileName = `${editingAssociate.id}-${Date.now()}.${fileExt}`;
-              const filePath = `associates/${fileName}`;
-
-              // Upload da imagem para o storage
-              const { error: uploadError } = await supabase.storage
+              // Upload da nova imagem
+              const photoFileName = `associate-${editingAssociate.id}-${Date.now()}.jpg`;
+              const { error: uploadError, data: uploadData } = await supabase.storage
                 .from('photos')
-                .upload(filePath, blob, {
-                  contentType: 'image/jpeg',
-                  upsert: true
-                });
+                .upload(photoFileName, file);
 
               if (uploadError) throw uploadError;
 
-              // Obter URL pública da imagem
-              const { data: { publicUrl } } = supabase.storage
-                .from('photos')
-                .getPublicUrl(filePath);
+              if (uploadData) {
+                const { data: { publicUrl } } = supabase.storage
+                  .from('photos')
+                  .getPublicUrl(uploadData.path);
 
-              // Atualizar o associado com a nova URL da foto
-              setEditingAssociate(prev => ({
-                ...prev!,
-                photo_url: publicUrl
-              }));
+                // Atualizar o associado com a nova URL da foto
+                const { error: updateError } = await supabase
+                  .from('associates')
+                  .update({ photo_url: publicUrl })
+                  .eq('id', editingAssociate.id);
 
-              toast({
-                title: "Sucesso",
-                description: "Foto atualizada com sucesso",
-              });
+                if (updateError) throw updateError;
 
+                // Atualizar o estado local
+                setEditingAssociate({
+                  ...editingAssociate,
+                  photo_url: publicUrl
+                });
+
+                toast({
+                  title: "Sucesso",
+                  description: "Foto atualizada com sucesso",
+                });
+              }
             } catch (error) {
               console.error('Erro ao salvar foto:', error);
               toast({
@@ -485,11 +498,9 @@ const Associates = () => {
                 description: "Não foi possível salvar a foto",
                 variant: "destructive",
               });
-            } finally {
-              setLoading(false);
             }
           }
-        }, 'image/jpeg', 0.95);
+        }, 'image/jpeg');
       }
     }
     setEditCropModalOpen(false);
@@ -702,50 +713,54 @@ const Associates = () => {
           editDependentCompletedCrop.height
         );
 
+        // Converter para blob e salvar
         canvas.toBlob(async (blob) => {
           if (blob) {
+            const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+            
             try {
-              setLoading(true);
-              
-              const fileExt = 'jpg';
-              const fileName = `dependent-${editingDependent.id}-${Date.now()}.${fileExt}`;
-              const filePath = `dependents/${fileName}`;
-
-              const { error: uploadError } = await supabase.storage
+              // Upload da nova imagem
+              const photoFileName = `dependent-${editingDependent.id}-${Date.now()}.jpg`;
+              const { error: uploadError, data: uploadData } = await supabase.storage
                 .from('photos')
-                .upload(filePath, blob, {
-                  contentType: 'image/jpeg',
-                  upsert: true
-                });
+                .upload(photoFileName, file);
 
               if (uploadError) throw uploadError;
 
-              const { data: { publicUrl } } = supabase.storage
-                .from('photos')
-                .getPublicUrl(filePath);
+              if (uploadData) {
+                const { data: { publicUrl } } = supabase.storage
+                  .from('photos')
+                  .getPublicUrl(uploadData.path);
 
-              setEditingDependent(prev => ({
-                ...prev!,
-                photo_url: publicUrl
-              }));
+                // Atualizar o dependente com a nova URL da foto
+                const { error: updateError } = await supabase
+                  .from('dependents')
+                  .update({ photo_url: publicUrl })
+                  .eq('id', editingDependent.id);
 
-              toast({
-                title: "Sucesso",
-                description: "Foto do dependente atualizada com sucesso",
-              });
+                if (updateError) throw updateError;
 
+                // Atualizar o estado local
+                setEditingDependent({
+                  ...editingDependent,
+                  photo_url: publicUrl
+                });
+
+                toast({
+                  title: "Sucesso",
+                  description: "Foto atualizada com sucesso",
+                });
+              }
             } catch (error) {
-              console.error('Erro ao salvar foto do dependente:', error);
+              console.error('Erro ao salvar foto:', error);
               toast({
                 title: "Erro",
-                description: "Não foi possível salvar a foto do dependente",
+                description: "Não foi possível salvar a foto",
                 variant: "destructive",
               });
-            } finally {
-              setLoading(false);
             }
           }
-        }, 'image/jpeg', 0.95);
+        }, 'image/jpeg');
       }
     }
     setEditDependentPhotoModalOpen(false);
@@ -977,9 +992,9 @@ const Associates = () => {
       </Dialog>
 
       <Dialog open={editCropModalOpen} onOpenChange={setEditCropModalOpen}>
-        <DialogContent className="max-w-[800px]">
+        <DialogContent className="max-w-[500px] h-[480px] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Recortar Foto</DialogTitle>
+            <DialogTitle>Recortar Foto do Associado</DialogTitle>
           </DialogHeader>
           {editSelectedImage && (
             <div>
@@ -987,20 +1002,17 @@ const Associates = () => {
                 crop={editCrop}
                 onChange={(c) => setEditCrop(c)}
                 onComplete={handleEditCropComplete}
-                aspect={1}
               >
                 <img
                   ref={editImgRef}
                   src={editSelectedImage}
                   alt="Crop"
-                  className="max-h-[500px] w-auto"
+                  style={{ height: '300px', width: 'auto' }}
+                  className="object-contain"
                 />
               </ReactCrop>
               <div className="flex justify-end gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setEditCropModalOpen(false)}
-                >
+                <Button variant="outline" onClick={() => setEditCropModalOpen(false)}>
                   Cancelar
                 </Button>
                 <Button onClick={handleEditCropSave}>
@@ -1149,7 +1161,7 @@ const Associates = () => {
       </Dialog>
 
       <Dialog open={editDependentPhotoModalOpen} onOpenChange={setEditDependentPhotoModalOpen}>
-        <DialogContent className="max-w-[800px]">
+        <DialogContent className="max-w-[500px] h-[480px] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Recortar Foto do Dependente</DialogTitle>
           </DialogHeader>
@@ -1159,23 +1171,53 @@ const Associates = () => {
                 crop={editDependentCrop}
                 onChange={(c) => setEditDependentCrop(c)}
                 onComplete={handleEditDependentCropComplete}
-                aspect={1}
               >
                 <img
                   ref={editDependentImgRef}
                   src={editDependentSelectedImage}
                   alt="Crop"
-                  className="max-h-[500px] w-auto"
+                  style={{ height: '300px', width: 'auto' }}
+                  className="object-contain"
                 />
               </ReactCrop>
               <div className="flex justify-end gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setEditDependentPhotoModalOpen(false)}
-                >
+                <Button variant="outline" onClick={() => setEditDependentPhotoModalOpen(false)}>
                   Cancelar
                 </Button>
                 <Button onClick={handleEditDependentCropSave}>
+                  Salvar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={dependentCropModalOpen} onOpenChange={setDependentCropModalOpen}>
+        <DialogContent className="max-w-[500px] h-[480px] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Recortar Foto do Dependente</DialogTitle>
+          </DialogHeader>
+          {dependentSelectedImage && (
+            <div>
+              <ReactCrop
+                crop={dependentCrop}
+                onChange={(c) => setDependentCrop(c)}
+                onComplete={handleDependentCropComplete}
+              >
+                <img
+                  ref={dependentImgRef}
+                  src={dependentSelectedImage}
+                  alt="Crop"
+                  style={{ height: '300px', width: 'auto' }}
+                  className="object-contain"
+                />
+              </ReactCrop>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setDependentCropModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleDependentCropSave}>
                   Salvar
                 </Button>
               </div>

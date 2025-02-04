@@ -401,9 +401,9 @@ const AddDependentForm = () => {
 
       {/* Image Crop Modal */}
       <Dialog open={cropModalOpen} onOpenChange={setCropModalOpen}>
-        <DialogContent className="max-w-[800px] w-full">
+        <DialogContent className="max-w-[500px] h-[480px] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Recortar Imagem</DialogTitle>
+            <DialogTitle>Recortar Foto do Dependente</DialogTitle>
           </DialogHeader>
           <div className="mt-4">
             {selectedImage && (
@@ -411,18 +411,18 @@ const AddDependentForm = () => {
                 crop={crop}
                 onChange={c => setCrop(c)}
                 onComplete={handleCropComplete}
-                aspect={1}
               >
                 <img
                   ref={imgRef}
                   src={selectedImage}
                   alt="Crop"
-                  className="max-h-[500px] w-auto"
+                  style={{ height: '300px', width: 'auto' }}
+                  className="object-contain"
                 />
               </ReactCrop>
             )}
           </div>
-          <div className="flex justify-end gap-4 mt-4">
+          <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setCropModalOpen(false)}>
               Cancelar
             </Button>

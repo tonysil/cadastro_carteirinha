@@ -856,7 +856,7 @@ const RegistrationForm = () => {
       </Dialog>
 
       <Dialog open={cropModalOpen} onOpenChange={setCropModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[500px] h-[480px] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Recortar Foto</DialogTitle>
           </DialogHeader>
@@ -866,12 +866,22 @@ const RegistrationForm = () => {
                 crop={crop}
                 onChange={(c) => setCrop(c)}
                 onComplete={handleCropComplete}
-                aspect={1}
               >
-                <img ref={imgRef} src={selectedImage} alt="Crop" />
+                <img
+                  ref={imgRef}
+                  src={selectedImage}
+                  alt="Crop"
+                  style={{ height: '300px', width: 'auto' }}
+                  className="object-contain"
+                />
               </ReactCrop>
-              <div className="flex justify-end mt-4">
-                <Button onClick={handleCropSave}>Salvar</Button>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setCropModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCropSave}>
+                  Salvar
+                </Button>
               </div>
             </div>
           )}
@@ -879,7 +889,7 @@ const RegistrationForm = () => {
       </Dialog>
 
       <Dialog open={mainPhotoModalOpen} onOpenChange={setMainPhotoModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[500px] h-[480px] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Recortar Foto Principal</DialogTitle>
           </DialogHeader>
@@ -889,12 +899,22 @@ const RegistrationForm = () => {
                 crop={crop}
                 onChange={(c) => setCrop(c)}
                 onComplete={handleCropComplete}
-                aspect={1}
               >
-                <img ref={mainPhotoRef} src={mainPhotoSelected} alt="Crop" />
+                <img
+                  ref={mainPhotoRef}
+                  src={mainPhotoSelected}
+                  alt="Crop"
+                  style={{ height: '300px', width: 'auto' }}
+                  className="object-contain"
+                />
               </ReactCrop>
-              <div className="flex justify-end mt-4">
-                <Button onClick={handleMainPhotoSave}>Salvar</Button>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setMainPhotoModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleMainPhotoSave}>
+                  Salvar
+                </Button>
               </div>
             </div>
           )}
@@ -902,9 +922,9 @@ const RegistrationForm = () => {
       </Dialog>
 
       <Dialog open={dependentCropModalOpen} onOpenChange={setDependentCropModalOpen}>
-        <DialogContent className="max-w-[800px] w-full">
+        <DialogContent className="max-w-[500px] h-[480px] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Recortar Imagem do Dependente</DialogTitle>
+            <DialogTitle>Recortar Foto do Dependente</DialogTitle>
           </DialogHeader>
           <div className="mt-4">
             {dependentSelectedImage && (
@@ -912,18 +932,18 @@ const RegistrationForm = () => {
                 crop={dependentCrop}
                 onChange={c => setDependentCrop(c)}
                 onComplete={handleDependentCropComplete}
-                aspect={1}
               >
                 <img
                   ref={dependentImgRef}
                   src={dependentSelectedImage}
                   alt="Crop"
-                  className="max-h-[500px] w-auto"
+                  style={{ height: '300px', width: 'auto' }}
+                  className="object-contain"
                 />
               </ReactCrop>
             )}
           </div>
-          <div className="flex justify-end gap-4 mt-4">
+          <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setDependentCropModalOpen(false)}>
               Cancelar
             </Button>
